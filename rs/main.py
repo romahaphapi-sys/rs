@@ -1,4 +1,4 @@
-import pygame 
+import pygame
 import math
 import sys
 import random
@@ -22,9 +22,7 @@ RED = (255, 0, 0)
 BLUE = (0, 0, 255)
 BLACK = (0, 0, 0)
 
-# Путь - список точек (x, y)
 PATH = [(0, 300), (200, 300), (400, 300), (600, 300), (800, 300)]
-
 TOWER_IMG_SIZE = 80
 
 try:
@@ -73,7 +71,6 @@ class Enemy:
             screen.blit(tank_img, rect)
         else:
             pygame.draw.circle(screen, RED, (int(self.x), int(self.y)), self.radius)
-        # Полоса здоровья
         hp_bar_len = 40
         pygame.draw.rect(screen, RED, (self.x - hp_bar_len//2, self.y - 25, hp_bar_len, 6))
         fill = (self.hp / self.max_hp) * hp_bar_len
@@ -87,7 +84,6 @@ class Tower:
         self.timer = 0
         self.level = 1
         self.size = TOWER_IMG_SIZE
-        self.upgrade_animation_timer = 0
         self.textures = {
             1: load_tower_texture(1),
             2: load_tower_texture(2),
@@ -101,13 +97,6 @@ class Tower:
             screen.blit(img, rect)
         else:
             pygame.draw.rect(screen, BLUE, (self.x - self.size//2, self.y - self.size//2, self.size, self.size))
-        # Убрано свечение вокруг башни
-        # if self.upgrade_animation_timer > 0:
-        #     alpha = 255 * (self.upgrade_animation_timer / 20)
-        #     flash_surface = pygame.Surface((self.range*2, self.range*2), pygame.SRCALPHA)
-        #     pygame.draw.circle(flash_surface, (255, 255, 0, int(alpha)), (self.range, self.range), self.range, 4)
-        #     screen.blit(flash_surface, (self.x - self.range, self.y - self.range))
-        #     self.upgrade_animation_timer -= 1
 
     def can_shoot(self):
         return self.timer == 0
@@ -131,7 +120,6 @@ class Tower:
         if self.level < 3:
             self.level += 1
             self.cooldown = max(10, self.cooldown - 3)
-            self.upgrade_animation_timer = 20
 
     def upgrade_cost(self):
         return 50 + 30 * (self.level - 1)
@@ -165,10 +153,7 @@ class Bullet:
 
 def draw_grass():
     screen.fill(GRASS_COLOR)
-    for _ in range(2000):
-        x = random.randint(0, WIDTH)
-        y = random.randint(0, HEIGHT)
-        pygame.draw.circle(screen, (80, 180, 80), (x, y), 1)
+    # Удалены блестки
 
 def draw_path():
     for i in range(len(PATH) - 1):
@@ -192,10 +177,20 @@ def draw_trees():
         (WIDTH - 130, HEIGHT - 120), (WIDTH - 80, HEIGHT - 90)
     ]
     for pos in tree_positions:
-        # Крона — круг с тенью
-        crown_radius = random.randint(25, 40)
-        pygame.draw.circle(screen, TREE_GREEN, pos, crown_radius)
-        pygame.draw.circle(screen, (15, 90, 15), (pos[0] - 5, pos[1] - 5), crown_radius - 5)
+        center_x, center_y = pos
+        trunk_color = (100, 50, 0)
+        branch_color = (120, 70, 20)
+
+        pygame.draw.line(screen, trunk_color, (center_x, center_y), (center_x, center_y - 8), 4)
+
+        branch_length = 15
+        branch_width = 2
+        angles = [0, 60, 120, 180, 240, 300]
+        for angle in angles:
+            radians = math.radians(angle)
+            end_x = center_x + branch_length * math.cos(radians)
+            end_y = center_y + branch_length * math.sin(radians)
+            pygame.draw.line(screen, branch_color, (center_x, center_y), (end_x, end_y), branch_width)
 
 def draw_gates():
     gate_width = 60
@@ -204,15 +199,13 @@ def draw_gates():
     arch_radius = 30
 
     start_x, start_y = PATH[0]
-    gate_rect = pygame.Rect(start_x - gate_width//2, start_y - gate_height//2, gate_width, gate_height)
-    pygame.draw.rect(screen, (120, 60, 0), gate_rect)
+    pygame.draw.rect(screen, (120, 60, 0), pygame.Rect(start_x - gate_width//2, start_y - gate_height//2, gate_width, gate_height))
     pygame.draw.arc(screen, (80, 40, 0),
                     (start_x - arch_radius, start_y - gate_height//2 - arch_radius, arch_radius*2, arch_radius*2),
                     math.pi, 2*math.pi, gate_thickness)
 
     end_x, end_y = PATH[-1]
-    gate_rect = pygame.Rect(end_x - gate_width//2, end_y - gate_height//2, gate_width, gate_height)
-    pygame.draw.rect(screen, (120, 60, 0), gate_rect)
+    pygame.draw.rect(screen, (120, 60, 0), pygame.Rect(end_x - gate_width//2, end_y - gate_height//2, gate_width, gate_height))
     pygame.draw.arc(screen, (80, 40, 0),
                     (end_x - arch_radius, end_y - gate_height//2 - arch_radius, arch_radius*2, arch_radius*2),
                     math.pi, 2*math.pi, gate_thickness)
@@ -231,7 +224,6 @@ def menu():
         draw_gates()
         draw_bushes()
         draw_trees()
-
         title = font.render("Tower Defense", True, YELLOW)
         start_text = font.render("Нажмите Enter для старта", True, WHITE)
         screen.blit(title, (WIDTH // 2 - title.get_width() // 2, HEIGHT // 3))
@@ -366,4 +358,5 @@ def main():
     game_loop()
 
 if __name__ == "__main__":
-    main()
+    main() 
+ 
